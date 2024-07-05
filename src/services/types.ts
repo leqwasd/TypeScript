@@ -508,7 +508,7 @@ export interface LanguageService {
      *
      * @param fileName A path to the file you want semantic diagnostics for
      */
-    getSuggestionDiagnostics(fileName: string): DiagnosticWithLocation[];
+    getSuggestionDiagnostics(fileName: string, preferences: UserPreferences): DiagnosticWithLocation[];
 
     // TODO: Rename this to getProgramDiagnostics to better indicate that these are any
     // diagnostics present for the program level, and not just 'options' diagnostics.

@@ -59,7 +59,7 @@ describe("unittests:: services:: cancellableLanguageServiceOperations", () => {
             1,
             service =>
                 // The LS doesn't do any top-level checks on the token for suggestion diagnostics, so the first check is within the checker
-                service.getSuggestionDiagnostics("file.js"),
+                service.getSuggestionDiagnostics("file.js", ts.emptyOptions),
             r => assert.notEqual(r.length, 0),
             "file.js",
             "function foo() { let a = 10; }",

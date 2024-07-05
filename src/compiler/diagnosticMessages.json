@@ -8317,5 +8317,13 @@
     "String literal import and export names are not supported when the '--module' flag is set to 'es2015' or 'es2020'.": {
         "category": "Error",
         "code": 18057
+    },
+    "Import path can be changed": {
+        "category": "Suggestion",
+        "code": 18058
+    },
+    "Change import path to \"{0}\"": {
+        "category": "Suggestion",
+        "code": 18059
     }
 }

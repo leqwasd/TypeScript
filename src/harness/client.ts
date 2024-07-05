@@ -501,7 +501,7 @@ export class SessionClient implements LanguageService {
     getSemanticDiagnostics(file: string): Diagnostic[] {
         return this.getDiagnostics(file, protocol.CommandTypes.SemanticDiagnosticsSync);
     }
-    getSuggestionDiagnostics(file: string): DiagnosticWithLocation[] {
+    getSuggestionDiagnostics(file: string, _preferences: UserPreferences): DiagnosticWithLocation[] {
         return this.getDiagnostics(file, protocol.CommandTypes.SuggestionDiagnosticsSync);
     }
     getRegionSemanticDiagnostics(_file: string, _ranges: TextRange[]): RegionDiagnosticsResult | undefined {

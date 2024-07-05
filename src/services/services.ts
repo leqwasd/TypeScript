@@ -2205,9 +2205,9 @@ export function createLanguageService(
         return false;
     }
 
-    function getSuggestionDiagnostics(fileName: string): DiagnosticWithLocation[] {
+    function getSuggestionDiagnostics(fileName: string, preferences: UserPreferences): DiagnosticWithLocation[] {
         synchronizeHostData();
-        return computeSuggestionDiagnostics(getValidSourceFile(fileName), program, cancellationToken);
+        return computeSuggestionDiagnostics(getValidSourceFile(fileName), program, preferences, host, cancellationToken);
     }
 
     function getCompilerOptionsDiagnostics() {

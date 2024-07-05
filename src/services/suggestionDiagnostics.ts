@@ -9,6 +9,7 @@ import {
     codefix,
     compilerOptionsIndicateEsModules,
     createDiagnosticForNode,
+    createModuleSpecifierResolutionHost,
     Diagnostics,
     DiagnosticWithLocation,
     Expression,
@@ -43,8 +44,10 @@ import {
     isStringLiteral,
     isVariableDeclaration,
     isVariableStatement,
+    LanguageServiceHost,
     MethodDeclaration,
     ModuleKind,
+    moduleSpecifiers,
     Node,
     NodeFlags,
     Program,
@@ -56,13 +59,14 @@ import {
     SourceFile,
     SyntaxKind,
     TypeChecker,
+    UserPreferences,
     VariableStatement,
 } from "./_namespaces/ts.js";
 
 const visitedNestedConvertibleFunctions = new Map<string, true>();
 
 /** @internal */
-export function computeSuggestionDiagnostics(sourceFile: SourceFile, program: Program, cancellationToken: CancellationToken): DiagnosticWithLocation[] {
+export function computeSuggestionDiagnostics(sourceFile: SourceFile, program: Program, preferences: UserPreferences, host: LanguageServiceHost, cancellationToken: CancellationToken): DiagnosticWithLocation[] {
     program.getSemanticDiagnostics(sourceFile, cancellationToken);
     const diags: DiagnosticWithLocation[] = [];
     const checker = program.getTypeChecker();
@@ -95,6 +99,7 @@ export function computeSuggestionDiagnostics(sourceFile: SourceFile, program: Pr
         }
     }
 
+    addChangeImportPathsDiagnostics(sourceFile, checker, program, preferences, host, diags);
     addRange(diags, sourceFile.bindSuggestionDiagnostics);
     addRange(diags, program.getSuggestionDiagnostics(sourceFile, cancellationToken));
     return diags.sort((d1, d2) => d1.start - d2.start);
@@ -311,5 +316,25 @@ export function canBeConvertedToAsync(node: Node): node is FunctionDeclaration |
             return true;
         default:
             return false;
+    }
+}
+
+
+function addChangeImportPathsDiagnostics(sourceFile: SourceFile, checker: TypeChecker, program: Program, preferences: UserPreferences, host: LanguageServiceHost, diags: DiagnosticWithLocation[]): void {
+    for (const moduleSpecifier of sourceFile.imports) {
+        const { pos, end, text: existingImportPath } = moduleSpecifier;
+        const importedSourceFile = program.getSourceFileFromReference(sourceFile, {
+            fileName: existingImportPath,
+            pos,
+            end,
+        });
+        if (!importedSourceFile) continue;
+
+        const result = moduleSpecifiers.getModuleSpecifiersForFileWithCacheInfo(importedSourceFile, checker, program.getCompilerOptions(), sourceFile, createModuleSpecifierResolutionHost(program, host), preferences, {}, /*forAutoImport*/ true)
+        
+        const differentModuleSpecifiers = result.moduleSpecifiers.filter(moduleSpecifier => moduleSpecifier !== existingImportPath);
+        if (differentModuleSpecifiers.length) {
+            diags.push(createDiagnosticForNode(moduleSpecifier, Diagnostics.Import_path_can_be_changed));
+        }
     }
 }

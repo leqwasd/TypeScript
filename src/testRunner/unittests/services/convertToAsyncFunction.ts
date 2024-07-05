@@ -357,7 +357,7 @@ function testConvertToAsyncFunction(it: Mocha.PendingTestFunction, caption: stri
             formatContext: ts.formatting.getFormatContext(ts.testFormatSettings, notImplementedHost),
         };
 
-        const diagnostics = languageService.getSuggestionDiagnostics(f.path);
+        const diagnostics = languageService.getSuggestionDiagnostics(f.path, context.preferences);
         const diagnostic = ts.find(diagnostics, diagnostic =>
             diagnostic.messageText === ts.Diagnostics.This_may_be_converted_to_an_async_function.message &&
             diagnostic.start === context.span.start && diagnostic.length === context.span.length);

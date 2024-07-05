@@ -313,6 +313,19 @@ function tryGetModuleSpecifiersFromCacheWorker(
     return [cached?.kind, cached?.moduleSpecifiers, moduleSourceFile, cached?.modulePaths, cache];
 }
 
+
+function tryGetModuleSpecifiersForSourceFileFromCacheWorker(
+    moduleSourceFile: SourceFile,
+    importingSourceFile: SourceFile | FutureSourceFile,
+    host: ModuleSpecifierResolutionHost,
+    userPreferences: UserPreferences,
+    options: ModuleSpecifierOptions = {},
+): readonly [kind?: ModuleSpecifierResult["kind"], specifiers?: readonly string[], moduleFile?: SourceFile, modulePaths?: readonly ModulePath[], cache?: ModuleSpecifierCache] {
+    const cache = host.getModuleSpecifierCache?.();
+    const cached = cache?.get(importingSourceFile.path, moduleSourceFile.path, userPreferences, options);
+    return [cached?.kind, cached?.moduleSpecifiers, moduleSourceFile, cached?.modulePaths, cache];
+}
+
 /**
  * Returns an import for each symlink and for the realpath.
  *
@@ -386,6 +399,46 @@ export function getModuleSpecifiersWithCacheInfo(
     cache?.set(importingSourceFile.path, moduleSourceFile.path, userPreferences, options, result.kind, modulePaths, result.moduleSpecifiers);
     return result;
 }
+
+/** @internal */
+
+export function getModuleSpecifiersForFileWithCacheInfo(
+    moduleSourceFile: SourceFile,
+    checker: TypeChecker,
+    compilerOptions: CompilerOptions,
+    importingSourceFile: SourceFile | FutureSourceFile,
+    host: ModuleSpecifierResolutionHost,
+    userPreferences: UserPreferences,
+    options: ModuleSpecifierOptions = {},
+    forAutoImport: boolean,
+): ModuleSpecifierResult {
+    let computedWithoutCache = false;
+    // eslint-disable-next-line prefer-const
+    let [kind, specifiers, _moduleSourceFile, modulePaths, cache] = tryGetModuleSpecifiersForSourceFileFromCacheWorker(
+        moduleSourceFile,
+        importingSourceFile,
+        host,
+        userPreferences,
+        options,
+    );
+    if (specifiers) return { kind, moduleSpecifiers: specifiers, computedWithoutCache };
+    if (!moduleSourceFile) return { kind: undefined, moduleSpecifiers: emptyArray, computedWithoutCache };
+
+    computedWithoutCache = true;
+    modulePaths ||= getAllModulePathsWorker(getInfo(importingSourceFile.fileName, host), moduleSourceFile.originalFileName, host, compilerOptions, options);
+    const result = computeModuleSpecifiers(
+        modulePaths,
+        compilerOptions,
+        importingSourceFile,
+        host,
+        userPreferences,
+        options,
+        forAutoImport,
+    );
+    cache?.set(importingSourceFile.path, moduleSourceFile.path, userPreferences, options, result.kind, modulePaths, result.moduleSpecifiers);
+    return result;
+}
+
 
 /** @internal */
 export function getLocalModuleSpecifierBetweenFileNames(

@@ -1315,7 +1315,7 @@ export class Session<TMessage = string> implements EventSender {
     private suggestionCheck(file: NormalizedPath, project: Project) {
         const diagnosticsStartTime = timestamp();
         tracing?.push(tracing.Phase.Session, "suggestionCheck", { file, configFilePath: (project as ConfiguredProject).canonicalConfigFilePath }); // undefined is fine if the cast fails
-        this.sendDiagnosticsEvent(file, project, project.getLanguageService().getSuggestionDiagnostics(file), "suggestionDiag", diagnosticsStartTime);
+        this.sendDiagnosticsEvent(file, project, project.getLanguageService().getSuggestionDiagnostics(file, this.getPreferences(file)), "suggestionDiag", diagnosticsStartTime);
         tracing?.pop();
     }
 
@@ -1942,7 +1942,7 @@ export class Session<TMessage = string> implements EventSender {
             return emptyArray;
         }
         // isSemantic because we don't want to info diagnostics in declaration files for JS-only users
-        return this.getDiagnosticsWorker(args, /*isSemantic*/ true, (project, file) => project.getLanguageService().getSuggestionDiagnostics(file), !!args.includeLinePosition);
+        return this.getDiagnosticsWorker(args, /*isSemantic*/ true, (project, file) => project.getLanguageService().getSuggestionDiagnostics(file, this.getPreferences(toNormalizedPath(file))), !!args.includeLinePosition);
     }
 
     private getJsxClosingTag(args: protocol.JsxClosingTagRequestArgs): TextInsertion | undefined {
@@ -3006,7 +3006,7 @@ export class Session<TMessage = string> implements EventSender {
             const existingDiagCodes = [
                 ...ls.getSyntacticDiagnostics(file),
                 ...ls.getSemanticDiagnostics(file),
-                ...ls.getSuggestionDiagnostics(file),
+                ...ls.getSuggestionDiagnostics(file, this.getPreferences(file)),
             ].map(d =>
                 decodedTextSpanIntersectsWith(startPosition, endPosition - startPosition, d.start!, d.length!)
                 && d.code

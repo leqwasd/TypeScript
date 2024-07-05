@@ -124,11 +124,12 @@ export function eachDiagnostic(context: CodeFixAllContext, errorCodes: readonly 
     }
 }
 
-function getDiagnostics({ program, sourceFile, cancellationToken }: CodeFixContextBase) {
+function getDiagnostics({ program, sourceFile, preferences, host, cancellationToken }: CodeFixContextBase) {
+
     const diagnostics = [
         ...program.getSemanticDiagnostics(sourceFile, cancellationToken),
         ...program.getSyntacticDiagnostics(sourceFile, cancellationToken),
-        ...computeSuggestionDiagnostics(sourceFile, program, cancellationToken),
+        ...computeSuggestionDiagnostics(sourceFile, program, preferences, host, cancellationToken),
     ];
     if (getEmitDeclarations(program.getCompilerOptions())) {
         diagnostics.push(

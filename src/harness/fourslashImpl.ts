@@ -664,7 +664,7 @@ export class TestState {
         return [
             ...this.languageService.getSyntacticDiagnostics(fileName),
             ...this.languageService.getSemanticDiagnostics(fileName),
-            ...(includeSuggestions ? this.languageService.getSuggestionDiagnostics(fileName) : ts.emptyArray),
+            ...(includeSuggestions ? this.languageService.getSuggestionDiagnostics(fileName, ts.emptyOptions) : ts.emptyArray),
         ];
     }
 
@@ -1810,7 +1810,7 @@ export class TestState {
     }
 
     public getSuggestionDiagnostics(expected: readonly FourSlashInterface.Diagnostic[]): void {
-        this.testDiagnostics(expected, this.languageService.getSuggestionDiagnostics(this.activeFile.fileName), "suggestion");
+        this.testDiagnostics(expected, this.languageService.getSuggestionDiagnostics(this.activeFile.fileName, ts.emptyOptions), "suggestion");
     }
 
     public getRegionSemanticDiagnostics(
