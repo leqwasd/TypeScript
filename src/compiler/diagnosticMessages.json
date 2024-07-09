@@ -8325,5 +8325,9 @@
     "Change import path to \"{0}\"": {
         "category": "Suggestion",
         "code": 18059
+    },
+    "Change all import paths": {
+        "category": "Suggestion",
+        "code": 18060
     }
 }
